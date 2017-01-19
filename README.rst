@@ -1,9 +1,10 @@
-# Matplotlib Presentations
-
+Matplotlib Presentations
+------------------------
 A collection of material from public Matplotlib talks and tutorials.
 
 
-## Talks
+Talks
+~~~~~
 
 +---------+------------------+---------------------------------------------------------+------------------+------------------------------+
 |   Date  |     location     |                         Summary                         |     Speaker      |            Video             |
@@ -14,10 +15,3 @@ A collection of material from public Matplotlib talks and tutorials.
 | 2016-09 | pydata Carolinas | Matplotlib 2.0: One does not simply change the defaults | Thomas A Caswell | https://youtu.be/wwUIEflrTCk |
 | 2016-11 |   plotcon NYC    | Matplotlib 2.0: One does not simply change the defaults | Thomas A Caswell | https://youtu.be/gZSWwmoaHYg |
 +---------+------------------+---------------------------------------------------------+------------------+------------------------------+
-
-## Tutorials
-
-|------|----------|---------|---------|-------|
-| Date | location | Summary | Speaker | Video |
-|------|----------|---------|---------|-------|
-| 2016-10| pydata DC | Interactive Matplotlib | Thomas A Caswell ||
