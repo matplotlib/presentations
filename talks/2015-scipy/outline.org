@@ -1,0 +1,145 @@
+* Introduction
+** Release schedule
+
+ - 1.5 :: next feature release
+   - End of July / beginning of August
+   - feature freeze
+   - focus of sprints
+ - 2.0 :: new default styles
+   - When it is ready
+   - blocking on bikeshedding
+   - only style changes based, will be based on most recent feature
+     release
+   - See svdw + njs talk
+ - 2.1 :: next feature release
+   - February or March 2016
+   - speeding up release cycle to make speeding up the release cycle easier
+
+Sprints will be focused on finishing off 1.5
+
+Will be BoF about default styles
+
+Signed FSA with numfocus
+
+** Some stats
+ - web traffic
+   - matplotlib.org
+     - 470k sessions/month
+     - 1.4m page views/month
+     - google thinks 190k users/month
+     - cute patterns in time
+   - github
+     - 40k views/month
+     - 14k users/month
+     - 3k total / 1.3k unique cloners/month
+     - 1.3k forks
+   - source forge
+     - 60-120k monthly downloads (39-55% windows)
+     - 2M total downloads in last 2 years
+     - spikes of 100k/month around releases
+   - pypi
+     - 190k/month
+   - Other
+     - no data from Cristof Gohlke, enthought, continuum,
+       any linux packaging
+
+ - contributors
+   - 40 commits/week
+   - 10 contributors per week, 25 per month
+   - 327 contributors since 2013-01-01
+
+
+* Where we were
+** 1.4 series (August 2014)
+  - first-class python 3 support
+    - same code base for 2 and 3 using `six`
+  - nbagg (notebook)
+    - live figures in the notebook
+    - inline makes me sad
+    - Phil Elson
+  - style module
+    - majorly improved rcparams
+    - Tony S Yu
+  - improved boxplots, violin plots, 3D quiver
+  - improvement to 'markevery'
+  - powerlaw norms
+  - improvements to ml ab and spectral analysis
+  - QT5 support
+  - cairocffi support
+  - gtk3 + python3
+
+* Where we going
+** 1.5
+*** features
+
+ - *at the repl the OO interface lazily auto-redraws*
+ - *convenience decorators*
+ - artists can add z-data to gui on hover (pixel value in imshow)
+ - auto-wrapping of long text
+ - cycler
+ - new tool-bar machinery
+ - legend support for more collections
+ - per-artist usetex control
+ - unified line style across Line, Patch, and Collection
+ - add page notes in multi-page pdfs
+ - text labels for ticks as input to `bar`
+ - support both wxpython classic and wxpython phoenix (python 3 support)
+ - Added 'logit' axis scale
+ - Major improvements to table
+ - fully decouple backends from pyplot (important for embedding)
+ - bucket of rcparams
+ - finish new toolbar integration
+
+
+** 2.0
+ - new default colors
+ - default style changes
+
+** 2.1
+ - *traitlets ?*
+ - *figure serialization*
+ - *use IPython widgets for nbagg implementation*
+ - Text-based axes layout
+ - float AGG buffers (fixes major alpha bugs)
+ - better container artists
+
+
+** and beyond!
+ - RTL text + more fonts
+ - layout engine (linear constraint solver)
+ - higher level API, semantic plotting
+ - drastic re-organization of internals
+ - caching in the rendering pipeline / auto-blitting
+
+* Soap box
+** How to write reusable plotting functions
+ - my preferred signature
+ - how this plays nice with OO auto-redraw
+ - pyplot registration / helper decorators
+ - no one expects `np.sum(axis=1)` to 'do the right thing' with out arguments!
+
+* Soap box 2-
+** down with implicit `Axes`
+ - no one expects `np.sum(axis=1)` to 'do the right thing'
+ - `np.gcd()` !?!
+ - pyplot implicit axes is artifact of MATLAB past, time to move on
+ - take axes input to plotting functions
+ - allows code reuse
+
+** auto-redraw
+ - Big advantage of `pyplot` was auto redraw
+ - All artists now know if they or their children are stale
+ - pyplot tries to install hooks to redraw smartly
+ - `stale` state available to embedding software
+
+**  Return the artists
+ - Allows you to build interactive tools
+
+* Place in community
+ - We really are friendly, just slow moving!
+ - Usage is now well beyond domain expertise of core devs
+ - adopt scipy model of kits
+   - shrink the size of core
+   - host domain-specific libraries under mpl org
+ - mpl-scipy, mpl-pd, ...
+   - core-dev supported

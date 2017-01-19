@@ -1,0 +1,175 @@
+* commit stats
+
+** bash to scrape git for commit information
+  #+BEGIN_SRC sh
+    echo 'time&name' > commits_time_author.csv; git log --no-merges --since=2013-01-01 --pretty=format:'%at&%aN <%aE>' >> commits_time_author.csv
+  #+END_SRC
+
+** data munging and plotting
+*** load data
+   #+BEGIN_SRC python
+     import pandas as pd
+     commits = pd.read_csv('commits_time_author.csv', sep='&')
+
+
+   #+END_SRC
+
+*** Cumulative commits
+    #+BEGIN_SRC python
+      import numpy as np
+      import matplotlib.pyplot as plt
+      from collections import Counter
+
+      commiters = Counter(commits['name'])
+      commiter_number = list(range(len(commiters) + 1))
+      c_count = list(commiters.values())
+      cum_commits = np.r_[[0], np.cumsum(sorted(c_count, reverse=True))]
+
+      fig, ax = plt.subplots()
+
+      ax.step(commiter_number, cum_commits, where='post', color='k')
+      ax.tick_params(axis='y', direction='out')
+      ax.tick_params(axis='x', direction='out')
+      ax.set_xlim([0, max(commiter_number)])
+      ax.set_ylim([0, np.sum(c_count)])
+      ax.set_ylabel('cumulative commits')
+      ax.set_xlabel('commiter #')
+
+    #+END_SRC
+
+*** commits by week / month / quarter
+    #+BEGIN_SRC python
+
+      def stats_plotter(ax, left_edges, unq_by_week, col, ylabel):
+          ln, = ax.step(left_edges,
+                        unq_by_week[col], color='k', where='post', lw=2)
+
+          hln = ax.axhline(unq_by_week[col].mean(), color='forestgreen', zorder=0, lw=2)
+          ax.set_ylabel(ylabel)
+          return ln, hln
+
+    #+END_SRC
+    #+BEGIN_SRC python
+      import datetime as dt
+      def by_window_binner(commits, start, stop, step, window_name):
+          edges = np.arange(start, stop + step, step)
+          left_edges = [dt.datetime.fromtimestamp(t) for t in edges[:-1]]
+
+          gb = commits.groupby(pd.cut(commits['time'], edges))
+          unq_by_bin = gb.agg(lambda x: len(set(x)))
+
+
+          fig, (ax, ax2) = plt.subplots(2, 1, sharex=True)
+          stats_plotter(ax, left_edges, unq_by_bin, 'time', 'commits per {}'.format(window_name))
+          stats_plotter(ax2, left_edges, unq_by_bin, 'name', 'committers per {}'.format(window_name))
+
+          ax.set_xlim((dt.datetime(2013, 1, 1), dt.datetime(2015, 7, 30)))
+
+          fig.autofmt_xdate()
+
+
+      start = dt.datetime(2013, 1, 1).timestamp()
+      stop  = dt.datetime.now().timestamp()
+      by_window_binner(commits, start, stop, 7*24*60*60, 'week')
+      by_window_binner(commits, start, stop, 4*7*24*60*60, 'month')
+      by_window_binner(commits, start, stop, 12*7*24*60*60, 'quarter')
+    #+END_SRC
+* issue/PR stats
+** get the data
+   #+BEGIN_SRC python
+     import github3
+     with open('/home/tcaswell/.ghtoken', 'r') as f:
+         gg = github3.login(token=f.read())
+
+   #+END_SRC
+   #+BEGIN_SRC python
+     all_issues = []
+     for iss in gg.issues_on('matplotlib', 'matplotlib', state='all', direction='asc'):
+         print(iss.number, iss.created_at, iss.closed_at)
+         all_issues.append(iss)
+   #+END_SRC
+   #+BEGIN_SRC python
+     import numpy as np
+     pr_events = []
+     issue_events = []
+
+
+     for iss in all_issues:
+         l_list = issue_events
+         if bool(iss.pull_request_urls):
+             l_list = pr_events
+
+         l_list.append((1, iss.created_at))
+         if iss.closed_at:
+             l_list.append((-1, iss.closed_at))
+
+     def open_count(event_list):
+         ev_sorted = sorted(event_list, key=lambda x: x[1])
+         state, _time = zip(*ev_sorted)
+         return _time, np.cumsum(state)
+
+     issue_time, issue_count = open_count(issue_events)
+     pr_time, pr_count = open_count(pr_events)
+   #+END_SRC
+
+** open count
+
+   #+BEGIN_SRC python
+     fig, ax = plt.subplots()
+     ax.plot(pr_time, pr_count, label='PR count', color='darkolivegreen', ls='-', lw=2)
+     ax.plot(issue_time, issue_count, label='issue count', color='red', ls='-', lw=2)
+     ax.legend(loc='upper left')
+     ax.set_xlim((dt.datetime(2013, 1, 1), dt.datetime(2015, 7, 30)))
+     ax.set_ylabel('number open')
+     fig.autofmt_xdate()
+   #+END_SRC
+
+
+** lifetime
+
+   #+BEGIN_SRC python
+     def pr_filter(iss):
+         return bool(iss.pull_request_urls)
+
+     def issue_filter(iss):
+         return not pr_filter(iss)
+
+     def extract_survival(all_issues, filter_func):
+         age = []
+         for iss in all_issues:
+             if not filter_func(iss):
+                 continue
+             if iss.closed_at:
+                 age.append((iss.closed_at - iss.created_at).total_seconds())
+             else:
+                 age.append((dt.datetime.now(tz=dt.timezone.utc) - iss.created_at).total_seconds())
+
+         age.sort()
+         return age
+
+
+     iss_ages = extract_survival(all_issues, issue_filter)
+     pr_ages = extract_survival(all_issues, pr_filter)
+     fig, ax = plt.subplots()
+     ax.plot(np.array(iss_ages) / (24 * 60 * 60),
+              1 - np.cumsum(np.ones(len(iss_ages)))/(len(iss_ages)),
+              label='issues', color='red', lw=2)
+
+     ax.plot(np.array(pr_ages) / (24 * 60 * 60),
+              1 - np.cumsum(np.ones(len(pr_ages)))/(len(pr_ages)),
+              label='PRs', color='darkolivegreen', lw=2)
+
+
+     ax.legend(loc='upper right')
+     ax.set_ylabel('fraction still open')
+     ax.set_xlabel('life time [days]')
+
+     ax.axhline(.5, ls='--', color='k')
+     ax.axhline(.25, ls='--', color='k')
+     ax.axhline(.1, ls='--', color='k')
+
+
+     ax.axvline(365 * 1, ls='--', color='k')
+     ax.axvline(365 * 2, ls='--', color='k')
+     ax.axvline(365 * 3, ls='--', color='k')
+   #+END_SRC

@@ -1,0 +1,175 @@
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:comment d:nil date:t e:t email:nil
+#+OPTIONS: f:t inline:t num:t p:nil pri:nil prop:nil stat:t tags:t
+#+OPTIONS: tasks:t tex:t timestamp:t toc:nil todo:t |:t
+#+BEAMER_FRAME_LEVEL: 2
+#+TITLE: =matplotlib=
+#+DATE: 2015-03-20
+#+AUTHOR: Thomas A Caswell
+#+EMAIL: tcaswell@{gmail.com,bnl.gov}
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:2 num:t toc:nil \n:nil @:t ::t |:t ^:{} -:nil f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+
+#+STARTUP: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [x11names]
+#+LATEX_HEADER: \usemintedstyle{emacs}
+#+latex_header: \setbeamertemplate{navigation symbols}{}%remove navigation symbols
+#+latex_header: \usepackage{multicol}
+#+latex_header: \titlegraphic{\includegraphics[width=\textwidth]{logo2}}
+#+latex_header: \institute[BNL]{Brookhaven National Labratory}
+#+BEAMER_COLOR_THEME: seahorse
+#+BEAMER_THEME: Madrid
+#+BEAMER_INNER_THEME: default
+
+
+#+BEAMER_FRAME_LEVEL: 2
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+#+PROPERTY: BEAMER_col_ALL 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 :ETC
+
+* Introduction
+** matplotlib: plotting in python
+
+
+\begin{center}
+    \includegraphics[width=.22\textwidth]{integral_demo} \quad
+    \includegraphics[width=.22\textwidth]{radar_chart} \quad
+    \includegraphics[width=.22\textwidth]{shape_kymo} \quad
+    \includegraphics[width=.22\textwidth]{scatterplot_matrix}
+
+\end{center}
+
+\vfill
+
+ - Runs almost everywhere
+ - Interactive in {Tk, Wx, GTK{2, 3}, Qt{4, 5}, OSX, ipynb, web}
+ - Save to {png, pdf, eps, svg, tiff, ps, pgf, svgz, jpg}
+
+\vfill
+
+Just signed Financial Sponsorship Agreement with NumFocus
+
+\vfill
+
+_Interactive Applications Using Matplotlib_, Benjamin V. Root
+
+\tiny https://www.packtpub.com/application-development/interactive-applications-using-matplotlib
+
+** Road map
+
+ - 1.4.3 :: Released Feb 2015
+   - notebook backend (nbagg)
+   - style module (basic style sheets)
+   - first-class python 3 support (via six)
+ - 2.0 :: New default colors, April(ish) 2015
+   - Down with jet!
+   - New default color-cycle pallete
+   - Different default cmap for heatmap-like and scatter-like
+ - 2.1 :: Feature release, July-August 2015
+   - Native serialize/de-serialize
+   - Ensure-axes decorator
+   - Better OO interactive
+   - Configurable toolbar
+   - Overhaul of API documentation/website
+
+
+* Soap Box
+** Parts of a Figure
+
+\begin{center}
+    \includegraphics[height=.8\textheight]{fig_map}
+
+\end{center}
+
+** Selecting a Colormap
+
+Default colormap should be:  sequential, perecptually uniform, attractive
+
+\begin{center}
+    \includegraphics[width=.3\textwidth]{lightness_00} \quad
+    \includegraphics[width=.3\textwidth]{lightness_02} \quad
+    \includegraphics[width=.3\textwidth]{lightness_04}
+\end{center}
+
+\vfill
+
+https://youtu.be/Alnc9E1RnD8 (Damon McDougall)
+
+https://youtu.be/rkDgBvT-giw (Kristen M Thyng)
+
+http://matplotlib.org/users/colormaps.html
+
+
+
+
+** =matplotlib= as Substrate
+\begin{center}
+ Base for domain specific plotting tools
+\end{center}
+
+   - =glue= :: http://www.glueviz.org/en/stable/
+   - =mpldatacursor= :: https://github.com/joferkington/mpldatacursor
+   - =seaborn= :: http://stanford.edu/~mwaskom/software/seaborn/
+   - =ggplot= :: https://github.com/yhat/ggplot
+   - =epipy= :: http://cmrivers.github.io/epipy/
+   - =pandas= :: http://pandas.pydata.org/
+   - =yt= :: http://yt-project.org/
+   - =holoviews= :: http://ioam.github.io/holoviews/
+   - =cartopy= :: http://scitools.org.uk/cartopy/
+   - =basemap= :: http://matplotlib.org/basemap/
+   - =astropy= :: http://www.astropy.org/
+   - =nipy= :: https://github.com/nipy
+   - =matplotlib.finance= :: looking for a maintainer
+
+
+** Functional Style
+
+#+begin_src python :exports code
+  #@ensure_ax
+  def pandas_plot(ax, df, **kwargs):
+      artists = {}
+
+      x = df.index.values
+      for k, v in df.iteritems():
+          ln, = ax.plot(x, v.values, **kwargs)
+          artists[k] = ln
+
+      ax.legend()
+      ax.set_xlim(np.min(x), np.max(x))
+
+      return artists
+#+end_src
+
+* Future
+** Native Figure Serialization
+  - Major missing feature
+  - Will be coupled with cleanup of =Artist= properties
+  - Allow import/export with plotly/bokeh/...
+  - Being discussed under MEP 25
+
+** Interactive Object-Oriented Usage
+
+ - don't need to call =plt.draw= explicitly
+ - no unnecessary =draw= calls
+ - coupled with =ensure_ax= -> complete overhaul of =pyplot=
+ - https://github.com/matplotlib/matplotlib/pull/4091
+
+\vfill
+
+In =IPython= repl with =%matplotlib= magic:
+
+#+begin_src python :exports code
+
+  In [1]: fig, ax = plt.subplots() # empty plot opens
+  In [2]: ln, = ax.plot(range(5))  # plot redraws
+  In [3]: ln.set_linewidth(5)  # plot redraws
+
+#+end_src

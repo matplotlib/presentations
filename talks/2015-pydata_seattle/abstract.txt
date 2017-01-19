@@ -1,0 +1,3 @@
+A demonstration of the notebook (nbagg) backend, an interactive
+backend integrated with IPython notebooks, followed by a discussion
+of future directions.
